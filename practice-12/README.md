@@ -45,14 +45,14 @@ Inputs (room 402 unless stated): T1 12:00/60 · T2 10:30/30 · T3 room 404 · T4
 
 | # | Expected | Code-based (Bolt): observed | Low-code (Appsmith): observed |
 |---|---|---|---|
-| T1 | Available | ✅ AVAILABLE "free 12:00–13:00" (`13_…`) | ✅ AVAILABLE / OK (`33_…`) |
-| T2 | Unavailable | ✅ UNAVAILABLE / OVERLAP (`14_…`) | ✅ UNAVAILABLE / OVERLAP (`34_…`) |
-| T3 | Unavailable | ✅ Room 404 "Blocked rooms cannot be booked"; ROOM_BLOCKED in the unit test (`15_…`) | ✅ UNAVAILABLE / ROOM_BLOCKED (`35_…`) |
-| T4 | Validation error | ✅ field error "Enter a whole number of minutes (1-1440)"; DURATION_ZERO in the unit test (`16_…`) | ✅ UNAVAILABLE / DURATION_ZERO (`36_…`) |
-| T5 | Validation error | ✅ UNAVAILABLE / DURATION_TOO_LONG (`17_…`) | ✅ UNAVAILABLE / DURATION_TOO_LONG (`37_…`) |
-| T6 | Validation error | ✅ UNAVAILABLE / PAST_START (`18_…`) | ✅ UNAVAILABLE / PAST_START (`38_…`) |
-| T7 | Available | ✅ AVAILABLE 11:00–11:30 (`19_…`) | ✅ AVAILABLE / OK (`39_…`) |
-| T8 | Bookings unchanged | ✅ 402 still 10:00–11:00 (`20_…`) | ✅ table unchanged after all checks (`35_…`) |
+| T1 | Available | PASS: AVAILABLE "free 12:00–13:00" (`13_…`) | PASS: AVAILABLE / OK (`33_…`) |
+| T2 | Unavailable | PASS: UNAVAILABLE / OVERLAP (`14_…`) | PASS: UNAVAILABLE / OVERLAP (`34_…`) |
+| T3 | Unavailable | PASS: Room 404 "Blocked rooms cannot be booked"; ROOM_BLOCKED in the unit test (`15_…`) | PASS: UNAVAILABLE / ROOM_BLOCKED (`35_…`) |
+| T4 | Validation error | PASS: field error "Enter a whole number of minutes (1-1440)"; DURATION_ZERO in the unit test (`16_…`) | PASS: UNAVAILABLE / DURATION_ZERO (`36_…`) |
+| T5 | Validation error | PASS: UNAVAILABLE / DURATION_TOO_LONG (`17_…`) | PASS: UNAVAILABLE / DURATION_TOO_LONG (`37_…`) |
+| T6 | Validation error | PASS: UNAVAILABLE / PAST_START (`18_…`) | PASS: UNAVAILABLE / PAST_START (`38_…`) |
+| T7 | Available | PASS: AVAILABLE 11:00–11:30 (`19_…`) | PASS: AVAILABLE / OK (`39_…`) |
+| T8 | Bookings unchanged | PASS: 402 still 10:00–11:00 (`20_…`) | PASS: table unchanged after all checks (`35_…`) |
 | **Total** | | **8 / 8** | **8 / 8** |
 
 Automated runs:
@@ -96,14 +96,14 @@ For this feature **I recommend the code-based approach (Bolt.new / React)**. Bot
 
 | Check | Code-based | Low-code | Evidence |
 |---|---|---|---|
-| Input validation | ✅ `parseTimeInput`/`parseDurationInput` + `INVALID_INPUT` | ✅ regex `HH:MM`, `Number.isInteger` → `INVALID_INPUT` | `11_…`, `32_…` |
-| Output / XSS | ✅ React escapes output; no `dangerouslySetInnerHTML` | ⚠ the Text widget shows strings from code; no user-supplied HTML is entered; an XSS injection test was **not** run | Bolt answer §4 |
-| Secrets | ✅ none in the code; `@supabase/supabase-js` is installed but unused | ✅ no datasources or keys | `bolt_prompt2_response.txt` |
+| Input validation | Yes: `parseTimeInput`/`parseDurationInput` + `INVALID_INPUT` | Yes: regex `HH:MM`, `Number.isInteger` → `INVALID_INPUT` | `11_…`, `32_…` |
+| Output / XSS | Yes: React escapes output; no `dangerouslySetInnerHTML` | Partial: the Text widget shows strings from code; no user-supplied HTML is entered; an XSS injection test was **not** run | Bolt answer §4 |
+| Secrets | Yes: none in the code; `@supabase/supabase-js` is installed but unused | Yes: no datasources or keys | `bolt_prompt2_response.txt` |
 | Permissions / public sharing | Site is public (bolt.host), data is fictional | Was private (`41_…`); **made public** for the professor (`42_…`). No datasources or secrets are exposed; the editor stays limited to one Administrator | `41_…`, `42_…` |
-| Dependencies (SCA) | ⚠ 8 npm dependencies; `npm audit` **was not run** | ⚠ platform responsibility (Appsmith Cloud) | — |
-| Runtime checks (DAST) | ✅ safe manual tests T1–T8 on our own app only | ✅ the same | `13_…`–`20_…`, `33_…`–`39_…` |
-| Third-party scanning | ❌ not done (no authorization) | ❌ not done | — |
-| AI changes verified | ✅ tests re-run by hand; findings recorded | ✅ `runTests` + UI | `09_…` |
+| Dependencies (SCA) | Partial: 8 npm dependencies; `npm audit` **was not run** | Partial: platform responsibility (Appsmith Cloud) | — |
+| Runtime checks (DAST) | Yes: safe manual tests T1–T8 on our own app only | Yes: the same | `13_…`–`20_…`, `33_…`–`39_…` |
+| Third-party scanning | No: not done (no authorization) | No: not done | — |
+| AI changes verified | Yes: tests re-run by hand; findings recorded | Yes: `runTests` + UI | `09_…` |
 
 ---
 
