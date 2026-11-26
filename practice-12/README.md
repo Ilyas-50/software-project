@@ -67,11 +67,11 @@ Automated runs:
 | Phase | Code-based (Bolt) | Low-code (Appsmith) |
 |---|---|---|
 | Setup | ~1 min (open the existing project) | ~1 min after login (empty app; the datasource step was skipped) |
-| Implementation | ~8 min (prompt 1 + "continue") | ~1.5 min JSObject + ~6 min placing widgets by hand + ~2.5 min bindings/Deploy |
+| Implementation | ~8 min (prompt 1 + "continue") | ~1.5 min JSObject + ~6 min placing widgets by hand + ~2.5 min bindings/Deploy + a later manual re-arrangement of the layout (not timed) |
 | Debugging | ~6 min of the 8 were the Bolt agent frozen on a search step (stop, reload, "continue") | ~1 min (drag-and-drop does not work for an automated agent; the student placed the widgets) |
 | Testing | ~7 min (terminal + 8 UI checks) | ~1.5 min (runTests + 8 UI checks) |
 | **Total** | **~16 min** | **~13 min** |
-| Unresolved defects | 0 functional; reason code not shown for T3/T4 in the UI; tests copy the logic instead of importing it | 0 functional; **layout not responsive at 375px**; uneven layout |
+| Unresolved defects | 0 functional; reason code not shown for T3/T4 in the UI; tests copy the logic instead of importing it | 0 functional; at 375px labels and the table are cut off (`40_…`) |
 
 **Measured vs impression.** The times above are measured, but **the comparison is not fully fair**: the low-code version was built second, from a contract and rules that were already worked out. The impression that "low-code is faster" for this task is **not confirmed**: almost all of the logic still had to be written as JS code inside the platform.
 
@@ -83,13 +83,13 @@ Automated runs:
 |---|---|---|
 | Functional tests | **8 / 8** (UI) + 15/15 assertions | **8 / 8** (UI) + 8/8 `runTests` |
 | Build and repair time | **~16 min** (6 of them an AI freeze) | **~13 min** (6 of them placing widgets by hand) |
-| Customization | Full control: TypeScript, any UI, responsive layout (`28_live_demo_v10_mobile_375px.jpg`) | Limited to the widget set; the rules still had to be a JS script; the layout broke at 375px (`40_…`) |
+| Customization | Full control: TypeScript, any UI, responsive layout (`28_live_demo_v10_mobile_375px.jpg`) | Limited to the widget set; the rules still had to be a JS script; the grid layout is placed by hand; at 375px labels and the table are cut off (`40_…`) |
 | Security controls | React escapes output, no `dangerouslySetInnerHTML`, no secrets or backend; dependencies can be checked with `npm audit` (not run) | Data is bound into widgets through `{{ }}`; no datasources or secrets; viewing is public, editing is Administrator-only (`42_…`); platform updates depend on the vendor |
 | Versioning / portability | Standard Vite/React project → GitHub, runs anywhere with Node | Proprietary JSON format; Git integration exists but was not connected; the code was copied out by hand |
 | Ongoing cost | $0 (Bolt free; about 190K tokens out of 498K per month for prompt 1) + free hosting on bolt.host | $0 (Appsmith Cloud free); paid plans for wider sharing and SSO |
 
 ### Recommendation
-For this feature **I recommend the code-based approach (Bolt.new / React)**. Both solutions passed 8/8. However, the code-based version has a responsive interface, normal version control (GitHub), separate pure logic with tests, and no vendor lock-in. Low-code (Appsmith) gave no real advantage here: the six-rule contract with reason codes still had to be written as JS code, and the layout needed extra manual work. Low-code makes sense for internal CRUD panels on top of a real database, where the widgets and connectors do most of the work.
+For this feature **I recommend the code-based approach (Bolt.new / React)**. Both solutions passed 8/8. However, the code-based version has a responsive interface, normal version control (GitHub), separate pure logic with tests, and no vendor lock-in. Low-code (Appsmith) gave no real advantage here: the six-rule contract with reason codes still had to be written as JS code, and the layout needed extra manual arranging. Low-code makes sense for internal CRUD panels on top of a real database, where the widgets and connectors do most of the work.
 
 ---
 
@@ -120,7 +120,7 @@ For this feature **I recommend the code-based approach (Bolt.new / React)**. Bot
 
 ## 7. Incomplete or simulated parts (labelled explicitly)
 
-- Low-code: **the layout is not responsive** (375px breaks); widgets are placed unevenly (by hand).
+- Low-code: the layout was arranged by hand on a fixed grid; at 375px labels and the table are cut off (`40_lowcode_mobile_375px.jpg`).
 - Low-code: **no JSON export or Git connection**; the code and bindings were copied out by hand.
 - `npm audit` and an XSS injection test were **not run**.
 - The times in section 3 are approximate, taken from screenshot timestamps.

@@ -18,8 +18,8 @@ The business logic is in the JSObject `Rules` ([Rules.js](Rules.js)). The platfo
 
 ## Limitations and incomplete parts (labelled honestly)
 
-- **Layout:** widgets are placed unevenly. The agent could not drag widgets on the canvas, so the student placed them by hand and nobody aligned them afterwards.
-- **Narrow screens:** at 375px the layout is cut off (screenshot `40_lowcode_mobile_375px_layout_DEFECT.jpg`). Auto-layout was not set up.
+- **Layout:** the agent could not drag widgets on the canvas, so the student placed and aligned them by hand: title, then Room + Start time, Duration, Decision, Table.
+- **Narrow screens:** at 375px everything is visible, but labels and the table are cut off (screenshot `40_lowcode_mobile_375px.jpg`). Auto-layout was not set up.
 - **Export / version control:** the app was not exported as JSON, and Git (Appsmith "Connect Git") was not connected. This folder holds a manual copy of the code and bindings.
 - **Access:** on 26.11.2026 "Make application public" was turned on, so anyone with the link can view the app (anonymous access checked). Editing is limited to the Administrator.
 - The app has no "Check" button: the decision is recalculated reactively whenever an input changes.
