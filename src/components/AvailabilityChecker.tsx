@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { ArrowLeft, CalendarClock, Clock } from 'lucide-react';
-import { checkAvailability } from '@/lib/availability';
+import { checkAvailability, type AvailabilityDecision } from '@/lib/availability';
 import type { Room } from '@/lib/rooms';
-import { formatMinutes, parseTimeInput } from '@/lib/time';
+import { formatMinutes, parseDurationInput, parseTimeInput } from '@/lib/time';
 import { StatusBanner } from '@/components/StatusBanner';
 import { TimeField } from '@/components/TimeField';
+import { DurationField } from '@/components/DurationField';
 
 type AvailabilityCheckerProps = {
   rooms: Room[];
@@ -22,7 +23,7 @@ export function AvailabilityChecker({
   onBrowseRooms,
 }: AvailabilityCheckerProps) {
   const [startInput, setStartInput] = useState('');
-  const [endInput, setEndInput] = useState('');
+  const [durationInput, setDurationInput] = useState('');
 
   if (!selectedRoom) {
     return (
@@ -45,12 +46,24 @@ export function AvailabilityChecker({
   }
 
   const start = parseTimeInput(startInput);
-  const end = parseTimeInput(endInput);
-  const timesReady = start !== null && end !== null;
-  const result = timesReady ? checkAvailability(selectedRoom, start, end, now) : null;
-  const summary = timesReady
-    ? `${selectedRoom.shortName} is free from ${formatMinutes(start)} to ${formatMinutes(end)} (${end - start} min).`
-    : '';
+  const duration = parseDurationInput(durationInput);
+  const inputsReady = start !== null && duration !== null;
+
+  let decision: AvailabilityDecision | null = null;
+  let summary = '';
+
+  if (inputsReady) {
+    decision = checkAvailability({
+      start,
+      duration,
+      blocked: selectedRoom.blocked,
+      bookings: selectedRoom.bookings,
+      now,
+    });
+    if (decision.available) {
+      summary = `${selectedRoom.shortName} is free from ${formatMinutes(start)} to ${formatMinutes(start + duration)} (${duration} min).`;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -132,8 +145,8 @@ export function AvailabilityChecker({
           Booking time
         </h2>
         <p className="mt-1 text-sm text-slate-600">
-          Use 24-hour HH:MM (for example 09:30) or minutes after midnight. Bookings
-          can last up to 120 minutes.
+          Enter a start time (24-hour HH:MM or minutes after midnight) and a duration
+          in minutes. Bookings can last up to 120 minutes.
         </p>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -144,20 +157,20 @@ export function AvailabilityChecker({
             onChange={setStartInput}
             parsed={start}
           />
-          <TimeField
-            id="end-time"
-            label="End time"
-            value={endInput}
-            onChange={setEndInput}
-            parsed={end}
+          <DurationField
+            id="duration"
+            label="Duration (minutes)"
+            value={durationInput}
+            onChange={setDurationInput}
+            parsed={duration}
           />
         </div>
 
         <div className="mt-6">
           <StatusBanner
-            result={result}
+            decision={decision}
             summary={summary}
-            hint="Enter a start and end time to check this room."
+            hint="Enter a start time and a duration to check this room."
           />
         </div>
       </section>

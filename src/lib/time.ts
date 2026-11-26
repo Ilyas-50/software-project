@@ -1,5 +1,4 @@
 export const MINUTES_PER_DAY = 24 * 60;
-export const MAX_BOOKING_MINUTES = 120;
 export const CURRENT_TIME_MINUTES = 9 * 60;
 
 function pad(value: number): string {
@@ -26,4 +25,11 @@ export function parseTimeInput(raw: string): number | null {
   }
 
   return total <= MINUTES_PER_DAY ? total : null;
+}
+
+export function parseDurationInput(raw: string): number | null {
+  const value = raw.trim();
+  if (!/^\d{1,4}$/.test(value)) return null;
+  const duration = Number(value);
+  return duration > 0 && duration <= MINUTES_PER_DAY ? duration : null;
 }

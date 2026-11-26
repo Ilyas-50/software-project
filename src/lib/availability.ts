@@ -1,42 +1,106 @@
-import type { Room } from '@/lib/rooms';
-import { MAX_BOOKING_MINUTES, formatMinutes } from '@/lib/time';
+import type { Booking } from '@/lib/rooms';
+import { formatMinutes } from '@/lib/time';
 
-export type AvailabilityResult =
-  | { available: true }
-  | { available: false; reasons: string[] };
+export const MAX_BOOKING_MINUTES = 120;
 
-export function checkAvailability(
-  room: Room,
-  start: number,
-  end: number,
-  now: number
-): AvailabilityResult {
-  const reasons: string[] = [];
+/**
+ * Stable reason codes that the presentation layer maps to copy.
+ * Deterministic rules never throw and never mutate inputs.
+ */
+export type ReasonCode =
+  | 'OK'
+  | 'INVALID_INPUT'
+  | 'PAST_START'
+  | 'DURATION_ZERO'
+  | 'DURATION_TOO_LONG'
+  | 'ROOM_BLOCKED'
+  | 'OVERLAP';
 
-  if (end <= start) {
-    reasons.push('End time must be later than the start time.');
+export type AvailabilityInput = {
+  start: number;
+  duration: number;
+  blocked: boolean;
+  bookings: Booking[];
+  now: number;
+};
+
+export type AvailabilityDecision = {
+  available: boolean;
+  reasonCode: ReasonCode;
+  message: string;
+};
+
+const INVALID_INPUT_MESSAGE =
+  'Enter a start time and a duration in whole minutes (0-1440).';
+
+/**
+ * Pure availability check. AC1-AC6 are evaluated in a fixed order so the
+ * first failing rule produces the reason code. Inputs are never mutated.
+ */
+export function checkAvailability(input: AvailabilityInput): AvailabilityDecision {
+  const { start, duration, blocked, bookings, now } = input;
+
+  if (
+    !Number.isFinite(start) ||
+    !Number.isFinite(duration) ||
+    start < 0 ||
+    start > 1440 ||
+    !Number.isInteger(start) ||
+    !Number.isInteger(duration)
+  ) {
+    return {
+      available: false,
+      reasonCode: 'INVALID_INPUT',
+      message: INVALID_INPUT_MESSAGE,
+    };
   }
+
+  // AC1: start time must be in the future (strictly after now).
   if (start <= now) {
-    reasons.push(
-      `Start time must be later than the current time (${formatMinutes(now)}).`
-    );
+    return {
+      available: false,
+      reasonCode: 'PAST_START',
+      message: `Start time must be later than the current time (${formatMinutes(now)}).`,
+    };
   }
-  if (end - start > MAX_BOOKING_MINUTES) {
-    reasons.push(
-      `The booking is ${end - start} minutes long. The maximum is ${MAX_BOOKING_MINUTES} minutes.`
-    );
+
+  // AC2: duration > 0 and <= 120 minutes.
+  if (duration <= 0) {
+    return {
+      available: false,
+      reasonCode: 'DURATION_ZERO',
+      message: 'Duration must be greater than zero minutes.',
+    };
   }
-  if (room.blocked) {
-    reasons.push('This room is blocked for maintenance or an administrative lock.');
+
+  if (duration > MAX_BOOKING_MINUTES) {
+    return {
+      available: false,
+      reasonCode: 'DURATION_TOO_LONG',
+      message: `Duration is ${duration} minutes. The maximum booking length is ${MAX_BOOKING_MINUTES} minutes.`,
+    };
   }
-  if (end > start) {
-    const clash = room.bookings.find((b) => start < b.end && b.start < end);
-    if (clash) {
-      reasons.push(
-        `It overlaps an existing booking from ${formatMinutes(clash.start)} to ${formatMinutes(clash.end)}. Back-to-back times are allowed.`
-      );
+
+  // AC4: a blocked room is unavailable regardless of time.
+  if (blocked) {
+    return {
+      available: false,
+      reasonCode: 'ROOM_BLOCKED',
+      message: 'This room is blocked for maintenance or an administrative lock.',
+    };
+  }
+
+  // AC3: overlapping bookings are unavailable. Touching endpoints are allowed.
+  const end = start + duration;
+  for (const booking of bookings) {
+    if (start < booking.end && booking.start < end) {
+      return {
+        available: false,
+        reasonCode: 'OVERLAP',
+        message: `It overlaps an existing booking from ${formatMinutes(booking.start)} to ${formatMinutes(booking.end)}. Back-to-back times are allowed.`,
+      };
     }
   }
 
-  return reasons.length === 0 ? { available: true } : { available: false, reasons };
+  return { available: true, reasonCode: 'OK', message: 'Available' };
 }

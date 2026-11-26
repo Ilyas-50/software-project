@@ -1,14 +1,14 @@
 import { CheckCircle2, Info, XCircle } from 'lucide-react';
-import type { AvailabilityResult } from '@/lib/availability';
+import type { AvailabilityDecision } from '@/lib/availability';
 
 type StatusBannerProps = {
-  result: AvailabilityResult | null;
+  decision: AvailabilityDecision | null;
   summary: string;
   hint: string;
 };
 
-export function StatusBanner({ result, summary, hint }: StatusBannerProps) {
-  if (result === null) {
+export function StatusBanner({ decision, summary, hint }: StatusBannerProps) {
+  if (decision === null) {
     return (
       <div
         role="status"
@@ -20,7 +20,7 @@ export function StatusBanner({ result, summary, hint }: StatusBannerProps) {
     );
   }
 
-  if (result.available) {
+  if (decision.available) {
     return (
       <div
         role="status"
@@ -47,14 +47,10 @@ export function StatusBanner({ result, summary, hint }: StatusBannerProps) {
         <p className="text-base font-bold uppercase tracking-wide text-rose-800">
           Unavailable
         </p>
-        <ul className="mt-2 space-y-1.5 text-sm text-rose-900">
-          {result.reasons.map((reason) => (
-            <li key={reason} className="flex gap-2">
-              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-rose-700" />
-              <span>{reason}</span>
-            </li>
-          ))}
-        </ul>
+        <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-rose-600/80">
+          {decision.reasonCode}
+        </p>
+        <p className="mt-1.5 text-sm text-rose-900">{decision.message}</p>
       </div>
     </div>
   );
