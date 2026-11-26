@@ -1,0 +1,20 @@
+﻿~/project ❯ node run_availability_tests.mjs
+=== Availability Contract Tests (T1-T8) ===
+  PASS  T1: available is true
+  PASS  T1: reasonCode is OK
+  PASS  T2: available is false
+  PASS  T2: reasonCode is OVERLAP
+  PASS  T3: available is false
+  PASS  T3: reasonCode is ROOM_BLOCKED
+  PASS  T4: available is false
+  PASS  T4: reasonCode is DURATION_ZERO
+  PASS  T5: available is false
+  PASS  T5: reasonCode is DURATION_TOO_LONG
+  PASS  T6: available is false
+  PASS  T6: reasonCode is PAST_START
+  PASS  T7: available is true (touching endpoints OK)
+  PASS  T7: reasonCode is OK
+  PASS  T8: bookings array not mutated
+==================================================
+Results: 15 passed, 0 failed, 15 total
+ALL TESTS PASSED

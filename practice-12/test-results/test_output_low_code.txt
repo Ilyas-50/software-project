@@ -1,0 +1,11 @@
+﻿Appsmith JSObject "Rules" -> runTests() response (26.11.2026)
+[
+  "T1: PASS (expected OK, got OK)",
+  "T2: PASS (expected OVERLAP, got OVERLAP)",
+  "T3: PASS (expected ROOM_BLOCKED, got ROOM_BLOCKED)",
+  "T4: PASS (expected DURATION_ZERO, got DURATION_ZERO)",
+  "T5: PASS (expected DURATION_TOO_LONG, got DURATION_TOO_LONG)",
+  "T6: PASS (expected PAST_START, got PAST_START)",
+  "T7: PASS (expected OK, got OK)",
+  "T8: PASS (bookings unchanged)"
+]

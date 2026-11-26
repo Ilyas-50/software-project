@@ -1,0 +1,72 @@
+Bolt.new response to Prompt 2 (comparison and review), 26.11.2026
+Copied verbatim from the Bolt chat. Tables are tab-separated.
+=====================================================================
+
+Code-Based (Bolt.new) vs Low-Code: Comparative Assessment
+How to read this document
+
+Every statement about the low-code version is an assumption to verify. The low-code app does not exist yet, so nothing about it is confirmed. Each low-code row below tells you what evidence you would need to collect to convert the assumption into a verified fact. The code-based column is grounded in the files I just read.
+
+1. Correctness against the same requirements
+Code-based (observed)
+
+The deterministic rules live in src/lib/availability.ts as a pure function checkAvailability({ start, duration, blocked, bookings, now }) returning { available, reasonCode, message }. The six criteria map to reason codes:
+
+AC	Rule	Code evidence	Reason code
+AC1	Start in the future	if (start <= now) line 59	PAST_START
+AC2	Duration > 0 and <= 120	Lines 68 and 76	DURATION_ZERO / DURATION_TOO_LONG
+AC3	Overlap unavailable	Lines 94-103, start < booking.end && booking.start < end	OVERLAP
+AC4	Blocked room unavailable	Line 85	ROOM_BLOCKED
+AC5	Decision without mutation	Function reads bookings via for...of, never writes; T8 confirms	OK
+AC6	Invalid input feedback	Lines 43-56 reject non-integer/out-of-range/non-finite	INVALID_INPUT
+
+Test evidence (real, from run_availability_tests.mjs): 15/15 assertions pass across T1-T8. Touching endpoints (T7) correctly return OK because the overlap predicate is strict on both sides.
+
+One observable gap in the code-based version: the test file (run_availability_tests.mjs) hand-copies the rule logic instead of importing availability.ts. If the two drift, tests pass while production breaks. Evidence needed to confirm drift hasn't happened: a diff of the checkAvailability function body in both files, or adding a real TS test runner.
+
+Low-code (assumption to verify)
+
+Low-code platforms (Appsmith, Budibase, Power Apps) would express these rules in a formula/JS snippet inside a widget's onClick or a query transformer. To assess correctness you would need:
+
+Evidence to collect: a screenshot or export of the formula/JS block that implements each AC, plus a run of the same T1-T8 inputs through the live app. The overlap predicate (start < exEnd && exStart < end) is easy to get wrong in a formula (<= instead of < would break T7).
+Assumed risk: low-code formula engines may coerce types (string "60" vs number 60), which could make the duration boundary checks behave differently. Verify by testing T4 and T5 with string inputs.
+
+2. Comparison matrix
+Dimension	Code-based (observed)	Low-code (assumption to verify)
+Functional tests	T1-T8, 15/15 pass; pure-function tests runnable with node run_availability_tests.mjs; Python suite also exists	Assume: no equivalent unit test harness. Formula logic is embedded in widgets and not independently testable. Verify: export the app JSON, confirm whether any test runner exists, and run the same 8 scenarios manually in the live app.
+Build / repair time	npm run typecheck ~2s, npm run build ~2s (observed in prior runs). Changes are file edits + build.	Assume: faster for simple form/CRUD apps, slower for custom validation logic because rules are buried in widget property panels. Verify: time a change to the overlap rule end-to-end in each platform.
+Customization	Full TypeScript; the ReasonCode union and AvailabilityInput type give compile-time guarantees (lines 10-25 of availability.ts). Any UI behavior is reachable.	Assume: limited to the platform's widget set and formula language. Custom reason codes with structured output may require escaping to raw JS, which reduces the low-code benefit. Verify: check whether each platform supports a typed return object from a formula, or only string/boolean.
+Security controls	Static data only — no backend, no secrets, no auth (see §4). React renders text, not raw HTML, so XSS surface is minimal.	Assume: platform may auto-bind data into the DOM via {{ }} interpolation; whether that escapes HTML is platform-specific. Verify: inject <img src=x onerror=alert(1)> as a room name and see if it renders. Do not assume safety.
+Versioning / portability	Source files in a standard Vite project; package.json pins versions; runs anywhere Node 18+ and npm exist. No vendor lock-in.	Assume: app definition is stored in the platform's proprietary format (Appsmith JSON, Power Apps .msapp blob). Portability to another platform requires a rewrite. Verify: export the app and confirm you can run it without the platform's runtime.
+Ongoing cost	Free at current scale: static build hosted anywhere (Bolt, Vercel, Netlify, S3). Dependencies are all MIT-licensed open source.	Assume: per-user or per-connection pricing. Power Apps Premium ~$5-12/user/mo + $0.6/conn/pass; Appsmith/Budibase have free tiers then self-host or cloud plans. Verify: check the current price page for each platform at your expected user count.
+
+3. Unsupported assumptions to flag
+#	Assumption	Why it's unsupported	Evidence needed
+A1	"Low-code is faster to build"	No low-code build has been timed for this specific app's 6-rule validation logic.	Time both builds for the same AC1-AC6 scope.
+A2	"Low-code is secure because the platform handles it"	Platform-default data binding may or may not escape HTML; public sharing may expose data without auth.	§4 checklist below.
+A3	"Formulas evaluate the same as JS"	Appsmith/Budibase use JS-sanitized formulas; Power Apps uses Power Fx, which has different type coercion and comparison semantics.	Run T4 (duration 0) and T5 (duration 121) with both numeric and string-typed inputs in each platform.
+A4	"The code-based tests prove production correctness"	The test file duplicates the rule logic rather than importing it. Tests pass against the copy, not the shipped module.	Add a TS test runner (Vitest) that imports @/lib/availability directly, or diff the two function bodies.
+A5	"Static fictional data means no security risk"	True for the current build, but if Bolt Database is later wired in (the project already has @supabase/supabase-js in package.json), RLS policies and auth become relevant.	Inspect whether any Bolt Database client code is actually called (none is, today).
+
+4. Security checklist
+Control	Code-based (observed)	Low-code (assumption to verify)	Evidence to collect
+Input validation / XSS	React escapes all JSX interpolation by default ({decision.message}, {room.name}, etc. — no dangerouslySetInnerHTML anywhere in the codebase). parseTimeInput and parseDurationInput reject non-numeric strings. The INVALID_INPUT path returns a fixed string, not user input.	Assume: platform {{ }} bindings may or may not escape HTML. Custom JS snippets (Appsmith {{ }}, Power Apps OnSelect) are a manual XSS/vector if they concatenate user input.	In each low-code platform, set a room name to <script>alert(1)</script> and load the catalog. Check the DOM for escaped text vs. a live script node.
+Secrets	No secrets in the repo. No .env values are referenced in app code. @supabase/supabase-js is a dependency but no client is instantiated in any .tsx/.ts file I read.	Assume: low-code platforms store datasource credentials (API keys, DB passwords) in the platform's admin panel. If the app is publicly shared, those credentials may be callable by anonymous users depending on the platform's server-side vs. client-side execution model.	Export the datasource config and check whether credentials are server-side only or exposed to the browser. In Power Apps, check the connector's "implicit" vs. "explicit" data source setting.
+Permissions / public sharing	No auth, no backend, no shared state. The app is a static client-side build; "sharing" means deploying the static files. No data is exposed because all data is fictional and hardcoded in rooms.ts.	Assume: low-code "public sharing" links may expose the entire app including any connected datasource queries, not just the current screen. App-level RBAC may not be row-level.	In each platform, share the app publicly, open it in an incognito window, and inspect network requests for any query that returns data not visible on the screen.
+Dependencies / SCA	8 runtime dependencies, all pinned with ^ ranges in package.json. npm audit would show known CVEs; not run in this session. No lockfile-free installs. lucide-react is excluded from Vite's optimizeDeps (line 14 of vite.config.ts) — a build config, not a security control.	Assume: the platform itself is an unaudited dependency. You cannot run npm audit on the platform runtime. CVEs in the platform are patched on the vendor's schedule.	Check the platform's security advisories page and SBOM availability (Appsmith publishes CVEs on GitHub; Power Apps does not publish an SBOM).
+Safe runtime checks / DAST	No DAST has been run. The app has no network endpoints, so DAST surface is limited to DOM XSS (mitigated by React escaping). npm run lint is available but not run in this session.	Assume: low-code platforms may expose auto-generated REST/GraphQL endpoints (Appsmith APIs, Power Platform Dataverse OData). These are a real DAST surface that the code-based version does not have.	Enumerate endpoints with a proxy (e.g., browser devtools network tab or OWASP ZAP) while using the app. Check whether each endpoint requires authentication.
+
+5. Risks ranked by severity, with verification evidence
+Risk	Severity	Observable evidence to verify
+Test logic drift (code-based): run_availability_tests.mjs copies checkAvailability instead of importing it.	Medium — tests could pass while production is broken.	Run diff <(sed -n '29,89p' run_availability_tests.mjs) <(sed -n '40,106p' src/lib/availability.ts) — any difference in control flow is drift. Or add Vitest and import the real module.
+Low-code XSS via data binding (low-code): unverified whether {{ roomName }} escapes HTML.	High if the platform binds raw HTML; Low if it escapes.	Inject <img src=x onerror=alert(document.cookie)> into any text field that flows to the DOM. Observe whether the onerror fires.
+Low-code public sharing exposes queries (low-code): sharing a link may expose all datasource queries, not just visible UI.	High if datasources are connected.	Open the shared app in an incognito session, inspect all network requests, and confirm no query returns data not shown on screen.
+Type coercion in formula engines (low-code): string "0" may not trigger the duration <= 0 branch in Power Fx.	Medium — could cause T4 or T5 to pass incorrectly.	In each platform, enter duration as a text "0" and "121" (not a number control). Check the reason code returned.
+Bolt Database dependency is unused but present (code-based): @supabase/supabase-js is in package.json but no client is instantiated. If someone later adds a client without RLS, all fictional data assumptions break.	Low today, High if activated.	grep -r "createClient" src/ — currently returns nothing. Re-run after any backend integration.
+No DAST or npm audit run (code-based): static analysis and lint are available but not confirmed clean in this session.	Low (no network surface), but unverified.	Run npm audit --production and npm run lint. Report any high-severity findings.
+
+Summary
+
+The code-based version has verified test evidence (15/15 T1-T8 assertions pass) and a clean separation of deterministic rules from presentation. Its main weakness is test-logic duplication: the tests copy the rule function rather than importing it, so they prove the copy works, not the shipped module.
+
+Every claim about the low-code version is an assumption. Low-code may be faster to build for simple CRUD, but the six-rule validation contract with structured reason codes is exactly the kind of logic that is hard to express in a formula and hard to unit-test in a widget. Security is not guaranteed by the platform — you must verify HTML escaping, public-sharing exposure, and credential isolation per platform with the concrete tests above.
