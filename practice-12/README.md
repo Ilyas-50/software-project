@@ -6,7 +6,7 @@
 | | Code-based | Low-code |
 |---|---|---|
 | Platform / AI tool | **Bolt.new** (Standard mode, free plan; Bolt does not show the model name in the UI) | **Appsmith Cloud** (free plan) |
-| Live demo | https://campus-room-availabi-qjtw.bolt.host (Version 10, published 26.11.2026) | https://app.appsmith.com/app/my-first-application/page1-6b07fd2ca11da8c85e01aa2d (⚠ **not public**: needs workspace access) |
+| Live demo | https://campus-room-availabi-qjtw.bolt.host (Version 10, published 26.11.2026) | https://app.appsmith.com/app/my-first-application/page1-6b07fd2ca11da8c85e01aa2d (made **public** 26.11.2026, `42_…`) |
 | Source | https://github.com/Ilyas-50/software-project (synced from Bolt, branch `main`) | [low-code-appsmith/Rules.js](low-code-appsmith/Rules.js), [widget-bindings.md](low-code-appsmith/widget-bindings.md) |
 | Helper AI agent | Claude Code (Opus 5.5) controlled the browser: sent prompts, ran tests, took screenshots | the same agent wrote the JSObject and bindings |
 
@@ -84,7 +84,7 @@ Automated runs:
 | Functional tests | **8 / 8** (UI) + 15/15 assertions | **8 / 8** (UI) + 8/8 `runTests` |
 | Build and repair time | **~16 min** (6 of them an AI freeze) | **~13 min** (6 of them placing widgets by hand) |
 | Customization | Full control: TypeScript, any UI, responsive layout (`28_live_demo_v10_mobile_375px.jpg`) | Limited to the widget set; the rules still had to be a JS script; the layout broke at 375px (`40_…`) |
-| Security controls | React escapes output, no `dangerouslySetInnerHTML`, no secrets or backend; dependencies can be checked with `npm audit` (not run) | Data is bound into widgets through `{{ }}`; no datasources or secrets; the app is private (`41_…`); platform updates depend on the vendor |
+| Security controls | React escapes output, no `dangerouslySetInnerHTML`, no secrets or backend; dependencies can be checked with `npm audit` (not run) | Data is bound into widgets through `{{ }}`; no datasources or secrets; viewing is public, editing is Administrator-only (`42_…`); platform updates depend on the vendor |
 | Versioning / portability | Standard Vite/React project → GitHub, runs anywhere with Node | Proprietary JSON format; Git integration exists but was not connected; the code was copied out by hand |
 | Ongoing cost | $0 (Bolt free; about 190K tokens out of 498K per month for prompt 1) + free hosting on bolt.host | $0 (Appsmith Cloud free); paid plans for wider sharing and SSO |
 
@@ -100,7 +100,7 @@ For this feature **I recommend the code-based approach (Bolt.new / React)**. Bot
 | Input validation | ✅ `parseTimeInput`/`parseDurationInput` + `INVALID_INPUT` | ✅ regex `HH:MM`, `Number.isInteger` → `INVALID_INPUT` | `11_…`, `32_…` |
 | Output / XSS | ✅ React escapes output; no `dangerouslySetInnerHTML` | ⚠ the Text widget shows strings from code; no user-supplied HTML is entered; an XSS injection test was **not** run | Bolt answer §4 |
 | Secrets | ✅ none in the code; `@supabase/supabase-js` is installed but unused | ✅ no datasources or keys | `bolt_prompt2_response.txt` |
-| Permissions / public sharing | Site is public (bolt.host), data is fictional | App is **private**, one Administrator | `41_…` |
+| Permissions / public sharing | Site is public (bolt.host), data is fictional | Was private (`41_…`); **made public** for the professor (`42_…`). No datasources or secrets are exposed; the editor stays limited to one Administrator | `41_…`, `42_…` |
 | Dependencies (SCA) | ⚠ 8 npm dependencies; `npm audit` **was not run** | ⚠ platform responsibility (Appsmith Cloud) | — |
 | Runtime checks (DAST) | ✅ safe manual tests T1–T8 on our own app only | ✅ the same | `13_…`–`20_…`, `33_…`–`39_…` |
 | Third-party scanning | ❌ not done (no authorization) | ❌ not done | — |
@@ -122,14 +122,13 @@ For this feature **I recommend the code-based approach (Bolt.new / React)**. Bot
 
 - Low-code: **the layout is not responsive** (375px breaks); widgets are placed unevenly (by hand).
 - Low-code: **no JSON export or Git connection**; the code and bindings were copied out by hand.
-- Low-code live link is **not public**: the professor needs workspace access, or the app has to be made public.
 - `npm audit` and an XSS injection test were **not run**.
 - The times in section 3 are approximate, taken from screenshot timestamps.
 
 ---
 
 ## Contents of this folder
-- `screenshots/`: 41 screenshots (01–28 code-based, 29–41 low-code)
+- `screenshots/`: 42 screenshots (01–28 code-based, 29–42 low-code)
 - `prompts/`: the prompt texts and Bolt's full answer to prompt 2
 - `test-results/`: test output for both solutions
 - `low-code-appsmith/`: the Appsmith JSObject and the widget bindings
