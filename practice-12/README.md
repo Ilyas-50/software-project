@@ -1,7 +1,6 @@
 # AI-Driven Software Engineering — Practice #12: Code-based vs Low-code
 
-**Student:** Ильяс Елубаев · **ID:** `<ID>` · **Class:** `<day of week, time>`
-**Date:** 26.11.2026
+**Student:** Ильяс Елубаев · **Date:** 26.11.2026
 
 | | Code-based | Low-code |
 |---|---|---|
